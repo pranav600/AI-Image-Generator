@@ -13,7 +13,7 @@ const Footer = () => {
 
           <div className="flex space-x-6">
             <a
-              href="https://instagram.com/pranavjoshitkd"
+              href="https://www.instagram.com/prnv_3322/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-pink-500 transition-colors"
