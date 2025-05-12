@@ -14,7 +14,7 @@
 
 /* Dark theme */
 html.dark {
-  --bg-primary: #baabab;
+  --bg-primary: #444444;
   --text-primary: #f8fafc;
   --border-color: #475569;
   --accent-color: #38bdf8;
