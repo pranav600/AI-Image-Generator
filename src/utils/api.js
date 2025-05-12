@@ -1,21 +1,32 @@
 export async function generateImage(prompt) {
   try {
+    // Ensure the prompt is not empty or just whitespace
+    if (!prompt.trim()) {
+      throw new Error("Prompt cannot be empty");
+    }
+
     const response = await fetch("/api/generate-image", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ prompt: prompt.trim() }),
     });
 
-    const data = await response.json();
-
+    // Check for non-JSON responses
     if (!response.ok) {
+      const errorDetails = await response.json().catch(() => ({}));
       const errorMessage =
-        data.error || data.details || "Failed to generate images";
+        errorDetails.error ||
+        errorDetails.details ||
+        response.statusText ||
+        "Failed to generate images";
       throw new Error(errorMessage);
     }
 
+    const data = await response.json();
+
+    // Validate the response structure
     if (
       !data.imageUrls ||
       !Array.isArray(data.imageUrls) ||
