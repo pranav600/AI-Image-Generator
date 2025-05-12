@@ -1,3 +1,6 @@
+// 
+
+
 import { createContext, useContext, useState, useEffect } from "react";
 
 const AppContext = createContext();
@@ -12,11 +15,14 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const savedFavorites = localStorage.getItem("favorites");
     const savedHistory = localStorage.getItem("history");
-    const savedTheme = localStorage.getItem("theme");
+    const savedTheme = localStorage.getItem("theme") || "dark";
 
     if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
     if (savedHistory) setHistory(JSON.parse(savedHistory));
-    if (savedTheme) setTheme(savedTheme);
+    setTheme(savedTheme);
+
+    // Apply the initial theme
+    document.documentElement.classList.add(savedTheme);
   }, []);
 
   // Save data to localStorage when it changes
@@ -24,6 +30,10 @@ export function AppProvider({ children }) {
     localStorage.setItem("favorites", JSON.stringify(favorites));
     localStorage.setItem("history", JSON.stringify(history));
     localStorage.setItem("theme", theme);
+
+    // Update the HTML class for the theme
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
   }, [favorites, history, theme]);
 
   const addToFavorites = (prompt, imageUrl) => {

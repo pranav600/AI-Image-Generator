@@ -92,9 +92,9 @@ const ImageCard = ({ imageUrl, prompt, timestamp, isFavorite = false }) => {
           </div>
         </div>
       </div>
-      <p className="p-4 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 truncate">
+      {/* <p className="p-4 text-sm text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 truncate">
         {prompt}
-      </p>
+      </p> */}
     </div>
   );
 };

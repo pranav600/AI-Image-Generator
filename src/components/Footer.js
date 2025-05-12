@@ -1,5 +1,5 @@
 import React from "react";
-import { FaInstagram, FaFacebook, FaEnvelope } from "react-icons/fa";
+import { FaInstagram, FaLinkedin, FaEnvelope } from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -21,12 +21,12 @@ const Footer = () => {
               <FaInstagram size={24} />
             </a>
             <a
-              href="https://facebook.com/pranavjoshitkd"
+              href="https://www.linkedin.com/in/joshipranav3322/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-blue-500 transition-colors"
             >
-              <FaFacebook size={24} />
+              <FaLinkedin size={24} />
             </a>
             <a
               href="mailto:pranavjoshitkd@gmail.com"
