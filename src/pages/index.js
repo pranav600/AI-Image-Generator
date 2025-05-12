@@ -36,11 +36,7 @@ export default function Home() {
       case "generate":
         return (
           <div className="w-full max-w-4xl mx-auto px-4">
-            <div className="text-center mb-12">
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-red-400 to-teal-400 text-transparent bg-clip-text">
-                AI Image Generator
-              </h1>
-            </div>
+            
 
             <form
               onSubmit={handleSubmit}
