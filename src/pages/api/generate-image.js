@@ -1,93 +1,78 @@
-import { HfInference } from "@huggingface/inference";
-
-const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
-
 export default async function handler(req, res) {
-  // Check for POST method
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const { prompt } = req.body;
+  const { prompt, numImages } = req.body;
 
-  // Check for empty prompt
-  if (!prompt || prompt.trim() === "") {
-    return res.status(400).json({ error: "Prompt cannot be empty" });
-  }
-
-  // Check for missing API key
-  if (!process.env.HUGGINGFACE_API_KEY) {
-    console.error("HUGGINGFACE_API_KEY is not set");
-    return res.status(500).json({
-      error: "API key not configured",
-      details: "Please set the HUGGINGFACE_API_KEY environment variable",
+  if (!prompt || typeof prompt !== "string") {
+    return res.status(400).json({
+      error: "Invalid prompt",
+      details: "Prompt must be a string",
     });
   }
+
+  const trimmedPrompt = prompt.trim();
+  if (trimmedPrompt.length === 0) {
+    return res.status(400).json({
+      error: "Invalid prompt",
+      details: "Prompt cannot be empty",
+    });
+  }
+
+  // Clamp numImages between 1 and 3
+  const n = Math.max(1, Math.min(Number(numImages) || 1, 3));
 
   try {
-    console.log("Generating image with prompt:", prompt);
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
-    const response = await hf.textToImage({
-      model: "stabilityai/stable-diffusion-xl-base-1.0", // More widely supported model
-      inputs: prompt,
-      parameters: {
-        negative_prompt: "blurry, bad quality, distorted, disfigured",
-        num_inference_steps: 20,
-        guidance_scale: 7.5,
-        num_images: 1,
-        width: 512,
-        height: 512,
-      },
-    });
+    const generateImage = async (retries = 3) => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          const response = await fetch(
+            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                inputs: trimmedPrompt,
+              }),
+            }
+          );
 
-    if (!response) {
-      throw new Error("No response from Hugging Face API");
-    }
+          const arrayBuffer = await response.arrayBuffer();
+          const contentType = response.headers.get("content-type");
 
-    // Convert response to base64
-    const base64Image = Buffer.from(await response.arrayBuffer()).toString(
-      "base64"
-    );
-    const imageUrl = `data:image/jpeg;base64,${base64Image}`;
+          if (!response.ok) {
+            const text = Buffer.from(arrayBuffer).toString("utf-8");
+            throw new Error(text || "Failed to generate image");
+          }
 
-    res.status(200).json({ imageUrls: [imageUrl] });
-  } catch (error) {
-    console.error("Error occurred:", error);
+          const base64 = Buffer.from(arrayBuffer).toString("base64");
+          const dataUrl = `data:${contentType};base64,${base64}`;
 
-    let statusCode = 500;
-    let message = "Failed to generate images";
-    let details = error.message || "Unknown error occurred";
-
-    if (error.response && error.response.body) {
-      try {
-        const errorBody = await error.response.json();
-        details =
-          errorBody.error || errorBody.message || JSON.stringify(errorBody);
-      } catch (parseError) {
-        console.error("Failed to parse error response:", parseError);
-        details = "Failed to parse error response";
+          return dataUrl;
+        } catch (err) {
+          console.log(`Retry ${i + 1} failed:`, err.message);
+          if (i === retries - 1) throw err;
+          await wait(2000);
+        }
       }
-    }
+    };
 
-    if (details.includes("API key")) {
-      statusCode = 401;
-      message = "Invalid API key. Please check your Hugging Face API key.";
-    } else if (details.includes("rate limit")) {
-      statusCode = 429;
-      message = "Rate limit exceeded. Please try again later.";
-    } else if (details.includes("No Inference Provider")) {
-      statusCode = 500;
-      message =
-        "Model not available. Please check your API key permissions at https://huggingface.co/settings/tokens";
-    } else if (details.includes("401")) {
-      statusCode = 401;
-      message = "Unauthorized. Please check your API key and permissions.";
-    }
+    // Generate images in parallel
+    const imagePromises = Array.from({ length: n }, () => generateImage());
+    const imageUrls = await Promise.all(imagePromises);
 
-    res.status(statusCode).json({
-      error: message,
-      details,
-      help: "Please make sure you have created an API key with the correct permissions at https://huggingface.co/settings/tokens",
+    return res.status(200).json({ imageUrls });
+  } catch (error) {
+    console.error("❌ Final error:", error.message);
+    return res.status(500).json({
+      error: "Image generation failed",
+      details: error.message || "Unexpected error occurred",
     });
   }
 }

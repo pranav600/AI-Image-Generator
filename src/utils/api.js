@@ -1,4 +1,4 @@
-export async function generateImage(prompt) {
+export async function generateImage(prompt, numImages = 1) {
   try {
     // Ensure the prompt is not empty or just whitespace
     if (!prompt.trim()) {
@@ -10,7 +10,7 @@ export async function generateImage(prompt) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ prompt: prompt.trim() }),
+      body: JSON.stringify({ prompt: prompt.trim(), numImages }),
     });
 
     // Check for non-JSON responses

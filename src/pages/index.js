@@ -10,6 +10,7 @@ export default function Home() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [numImages, setNumImages] = useState(1);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,7 +19,7 @@ export default function Home() {
     setImages([]);
 
     try {
-      const imageUrls = await generateImage(prompt);
+      const imageUrls = await generateImage(prompt, numImages);
       setImages(imageUrls);
       imageUrls.forEach((url) => addToHistory(prompt, url));
     } catch (err) {
@@ -31,27 +32,42 @@ export default function Home() {
     }
   };
 
+  // Different animation styles for skeletons
+  const skeletonAnimations = [
+    "animate-pulse",
+    "animate-pulse",
+    "animate-pulse",
+  ];
+
   const renderContent = () => {
     switch (activeTab) {
       case "generate":
         return (
-          <div className="w-full max-w-4xl mx-auto px-4">
-            
-
+          <div className="w-full max-w-7xl mx-auto px-4">
             <form
               onSubmit={handleSubmit}
               className="flex flex-col gap-4 mb-8 w-full max-w-2xl mx-auto"
             >
-              <div className="relative">
+              <div className="relative w-full">
                 <input
                   type="text"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="Describe the image you want to generate..."
-                  className="w-full p-4 pl-12 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-base transition-all duration-300 focus:outline-none focus:border-teal-400"
+                  className="w-full p-4 pl-12 pr-28 border-2 border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-base transition-all duration-300 focus:outline-none focus:border-teal-400"
                   required
                 />
                 <FaMagic className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <select
+                  value={numImages}
+                  onChange={(e) => setNumImages(Number(e.target.value))}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 dark:bg-gray-800 text-gray-800 dark:text-white shadow-sm"
+                  style={{ minWidth: 80 }}
+                >
+                  <option value={1}>1 image</option>
+                  <option value={2}>2 images</option>
+                  <option value={3}>3 images</option>
+                </select>
               </div>
               <button
                 type="submit"
@@ -95,23 +111,34 @@ export default function Home() {
             )}
 
             {loading && (
-              <div className="w-full max-w-[512px] mx-auto my-8">
-                <div className="w-full aspect-square bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 bg-[length:200%_100%] animate-shimmer rounded-xl" />
+              <div className="flex justify-center gap-4 my-8">
+                {Array.from({ length: numImages }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="relative w-full max-w-[512px] aspect-square"
+                  >
+                    <div
+                      className={`w-full h-full rounded-xl bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 dark:from-gray-700 dark:via-gray-600 dark:to-gray-700 ${
+                        skeletonAnimations[index % skeletonAnimations.length]
+                      }`}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-shimmer" />
+                  </div>
+                ))}
               </div>
             )}
 
             {images.length > 0 && (
-              <div className="flex justify-center w-full mt-8">
-                <div className="w-full max-w-[512px]">
-                  {images.map((imageUrl, index) => (
+              <div className="flex justify-center gap-4 mt-8 flex-wrap md:flex-nowrap">
+                {images.map((imageUrl, index) => (
+                  <div key={index} className="w-full max-w-[512px]">
                     <ImageCard
-                      key={index}
                       imageUrl={imageUrl}
                       prompt={prompt}
-                      timestamp={Date.now()}
+                      timestamp={Date.now() + index}
                     />
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 # AI Image Generator
 
-A Next.js application that generates images using Hugging Face's Stable Diffusion XL API.
+A Next.js application that generates images using Google's Gemini AI model.
 
 ## Features
 
@@ -12,7 +12,7 @@ A Next.js application that generates images using Hugging Face's Stable Diffusio
 ## Prerequisites
 
 - Node.js 14.x or later
-- Hugging Face API key
+- Google AI API key
 
 ## Setup
 
@@ -29,10 +29,10 @@ cd ai-image-generator
 npm install
 ```
 
-3. Create a `.env.local` file in the root directory and add your Hugging Face API key:
+3. Create a `.env.local` file in the root directory and add your Google AI API key:
 
 ```
-HUGGINGFACE_API_KEY=your_huggingface_api_key_here
+GOOGLE_API_KEY=your_google_api_key_here
 ```
 
 4. Start the development server:
@@ -54,7 +54,7 @@ npm run dev
 
 - Next.js
 - React
-- Hugging Face API (Stable Diffusion XL)
+- Google Gemini AI API
 - CSS Modules
 
 ## License
