@@ -1,20 +1,14 @@
 # AI Image Generator
 
-A Next.js application that generates images using Google's Gemini AI model.
+A modern Next.js app that generates AI images from text prompts using Hugging Face’s Stable Diffusion API.
 
-## Features
+🚀 Features
+	•	Generate up to 3 images per prompt
+	•	Clean, responsive UI
+	•	Real-time feedback with loading and error handling
 
-- Generate images from text prompts
-- Modern and responsive UI
-- Real-time image generation
-- Error handling and loading states
 
-## Prerequisites
-
-- Node.js 14.x or later
-- Google AI API key
-
-## Setup
+🔧 Setup
 
 1. Clone the repository:
 
@@ -29,10 +23,10 @@ cd ai-image-generator
 npm install
 ```
 
-3. Create a `.env.local` file in the root directory and add your Google AI API key:
+3. Create a `.env.local` file in the root directory and add your Hugging Face API key:
 
 ```
-GOOGLE_API_KEY=your_google_api_key_here
+HUGGINGFACE_API_KEY=your_api_key_here
 ```
 
 4. Start the development server:
@@ -43,20 +37,18 @@ npm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Usage
+🧠 Tech Stack
+	•	Next.js
+	•	React
+	•	Tailwind CSS
+	•	Hugging Face API (Stable Diffusion)
 
-1. Enter a text prompt describing the image you want to generate
-2. Click the "Generate Image" button
-3. Wait for the image to be generated
-4. The generated image will appear below the form
 
-## Technologies Used
+📷 [Preview – Visit Site](https://ai-image-generator-ten-theta.vercel.app/)
 
-- Next.js
-- React
-- Google Gemini AI API
-- CSS Modules
+![AI Image Generator Screenshot](public/preview.png)
 
-## License
+
+📄 License
 
 MIT
