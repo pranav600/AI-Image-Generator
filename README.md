@@ -1,4 +1,4 @@
-# AI Image Generator
+# AI Image Generator!
 
 A modern Next.js app that generates AI images from text prompts using Hugging Face’s Stable Diffusion API.
 
