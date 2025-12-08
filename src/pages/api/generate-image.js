@@ -1,9 +1,11 @@
+import { HfInference } from "@huggingface/inference";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const { prompt, numImages } = req.body;
+  const { prompt, numImages = 1 } = req.body;
 
   if (!prompt || typeof prompt !== "string") {
     return res.status(400).json({
@@ -21,43 +23,60 @@ export default async function handler(req, res) {
   }
 
   // Clamp numImages between 1 and 3
-  const n = Math.max(1, Math.min(Number(numImages) || 1, 3));
+  const n = Math.max(1, Math.min(Number(numImages), 3));
 
   try {
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const HUGGINGFACE_API_KEY = process.env.HUGGINGFACE_API_KEY;
+
+    // Check if API key is available
+    if (!HUGGINGFACE_API_KEY) {
+      console.error("HUGGINGFACE_API_KEY is not set in environment variables");
+      return res.status(500).json({
+        error: "Server configuration error",
+        details:
+          "API key is not configured. Please check your server settings.",
+      });
+    }
+
+    const hf = new HfInference(HUGGINGFACE_API_KEY);
 
     const generateImage = async (retries = 3) => {
       for (let i = 0; i < retries; i++) {
         try {
-          const response = await fetch(
-            "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                inputs: trimmedPrompt,
-              }),
-            }
+          console.log(
+            `Attempt ${i + 1} to generate image with prompt:`,
+            trimmedPrompt
           );
 
+          // Using the Nebius provider with FLUX.1-dev model
+          const response = await hf.textToImage({
+            provider: "nebius",
+            model: "black-forest-labs/FLUX.1-dev",
+            inputs: trimmedPrompt,
+            parameters: {
+              num_inference_steps: 25, // Increased from 5 for better quality
+              guidance_scale: 7.5, // Added for better quality
+              height: 1024, // Standard size
+              width: 1024, // Standard size
+            },
+          });
+
+          console.log("Received image from Hugging Face API");
+
+          // Convert Blob to base64
           const arrayBuffer = await response.arrayBuffer();
-          const contentType = response.headers.get("content-type");
-
-          if (!response.ok) {
-            const text = Buffer.from(arrayBuffer).toString("utf-8");
-            throw new Error(text || "Failed to generate image");
-          }
-
           const base64 = Buffer.from(arrayBuffer).toString("base64");
-          const dataUrl = `data:${contentType};base64,${base64}`;
-
-          return dataUrl;
+          return `data:image/png;base64,${base64}`;
         } catch (err) {
-          console.log(`Retry ${i + 1} failed:`, err.message);
-          if (i === retries - 1) throw err;
+          console.error(`Attempt ${i + 1} failed:`, err.message);
+          if (i === retries - 1) {
+            console.error("All retry attempts failed");
+            throw err;
+          }
+          console.log(
+            `Retrying in 2 seconds... (${retries - i - 1} attempts remaining)`
+          );
           await wait(2000);
         }
       }
@@ -69,10 +88,11 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ imageUrls });
   } catch (error) {
-    console.error("❌ Final error:", error.message);
+    console.error("❌ Final error:", error);
     return res.status(500).json({
       error: "Image generation failed",
       details: error.message || "Unexpected error occurred",
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 }
